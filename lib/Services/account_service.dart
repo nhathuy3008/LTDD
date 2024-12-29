@@ -55,4 +55,26 @@ class AccountService {
       throw Exception('Không thể kết nối đến API: $e');
     }
   }
+  //cập nhật tài khoản
+  Future<Map<String, dynamic>> updateAccount(String id, Map<String, dynamic> accountData) async {
+    if (accountData.isEmpty) {
+      throw Exception('Dữ liệu cập nhật không được để trống.');
+    }
+
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(accountData),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Lỗi cập nhật tài khoản: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Không thể kết nối đến API: $e');
+    }
+  }
 }
