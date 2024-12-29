@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,6 +22,7 @@ public class Playlist {
     private String name;
 
     private String image;
+
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account owner; // Người sở hữu playlist
@@ -31,5 +33,5 @@ public class Playlist {
             joinColumns = @JoinColumn(name = "playlist_id"),
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
-    private List<Song> song; // Danh sách bài hát trong playlist
+    private List<Song> songs = new ArrayList<>(); // Danh sách bài hát trong playlist
 }
