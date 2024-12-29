@@ -3,7 +3,9 @@ package app_music.demo.controllers;
 
 import app_music.demo.Model.Account;
 import app_music.demo.Service.AccountService;
+import app_music.demo.Service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -68,18 +70,22 @@ public class AccountController {
 
     //API dang nhap
     @PostMapping("/login")
-    public Map<String,Object>login(@RequestParam String email,@RequestParam String password){
-        Map<String,Object> response = new HashMap<>();
-        Optional<Account> account = accountService.login(email,password);
-        if(account.isPresent()){
-            response.put(("message"),"Đăng nhập thành công");
-            response.put(("status"),"thành công");
-            response.put(("id"),account.get().getId());
+    public Map<String, Object> login(@RequestParam String email, @RequestParam String password) {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Account> account = accountService.login(email, password);
 
-        }else{
-            response.put(("message"),"Email hoặc mật khẩu không hợp lệ");
-            response.put(("status"),"lỗi");
+        if (account.isPresent()) {
+            Account loggedInAccount = account.get();
+            response.put("message", "Đăng nhập thành công");
+            response.put("status", "thành công");
+            response.put("id", loggedInAccount.getId());
+            response.put("fullName", loggedInAccount.getFullName()); // Thêm fullName vào phản hồi
+            response.put("image", loggedInAccount.getImage()); // Thêm image vào phản hồi
+        } else {
+            response.put("message", "Email hoặc mật khẩu không hợp lệ");
+            response.put("status", "lỗi");
         }
+
         return response;
     }
     //kiem tra mat khau cu

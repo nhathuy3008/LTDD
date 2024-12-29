@@ -47,7 +47,7 @@ public class EmailService {
     }
 
     public void sendVerificationSuccessEmail(String to) throws MessagingException {
-        String subject = "Kích hoạt tài khoản thành công - TniCiu Travel";
+        String subject = "Kích hoạt tài khoản thành công - App Music";
 
         String content = "<html>"
                 + "<body style=\"font-family: Arial, sans-serif; line-height: 1.6; background-color: #111212; margin: 0; padding: 0;\">"
@@ -64,7 +64,7 @@ public class EmailService {
                 + "</div>"
                 + "</div>"
                 + "<div style=\"padding: 10px; text-align: center; background-color: #f1f1f1; font-size: 12px; color: #999999;\">"
-                + "<p>TniCiu Travel © 2024. Tất cả các quyền được bảo lưu.</p>"
+                + "<p>App Music © 2024. Tất cả các quyền được bảo lưu.</p>"
                 + "</div>"
                 + "</div>"
                 + "</body>"
