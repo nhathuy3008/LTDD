@@ -38,4 +38,21 @@ class AccountService {
       throw Exception('Không thể kết nối đến API: $e');
     }
   }
+  // Đăng nhập
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login?email=$email&password=$password'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      } else {
+        throw Exception('Lỗi đăng nhập: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Không thể kết nối đến API: $e');
+    }
+  }
 }
