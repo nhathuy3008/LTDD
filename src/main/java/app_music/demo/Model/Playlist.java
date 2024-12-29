@@ -20,6 +20,7 @@ public class Playlist {
     @NotBlank(message = "Tên danh sách phát là bắt buộc!")
     private String name;
 
+    private String image;
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account owner; // Người sở hữu playlist

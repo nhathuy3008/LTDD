@@ -17,7 +17,7 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank (message = "Tên bài hát là bắt buộc !!!")
+    @NotBlank(message = "Tên bài hát là bắt buộc !!!")
     private String name;
 
     @NotBlank(message = "Tên nghệ sĩ là bắt buộc!")
@@ -25,9 +25,12 @@ public class Song {
 
     @NotBlank(message = "URL bài hát là bắt buộc!")
     private String url; // Đường dẫn file nhạc
-    private String image;
+
+    private String image; // Đường dẫn hình ảnh
+
     @ManyToOne
     @JoinColumn(name = "genre_id", nullable = false)
     private Genre genre;
+
     private int likeCount = 0;
 }
