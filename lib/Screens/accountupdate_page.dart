@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Services/account_service.dart';
-import 'dart:io'; // Chỉ cần nếu bạn sử dụng trên mobile
-import 'package:flutter/foundation.dart'; // Để sử dụng kIsWeb
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class AccountUpdatePage extends StatefulWidget {
   @override
@@ -13,7 +13,7 @@ class AccountUpdatePage extends StatefulWidget {
 class _AccountUpdatePageState extends State<AccountUpdatePage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _imagePath; // Đường dẫn đến ảnh
+  String? _imagePath;
   final ImagePicker _picker = ImagePicker();
   final AccountService _accountService = AccountService();
 
@@ -27,7 +27,7 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _usernameController.text = prefs.getString('fullName') ?? '';
-      _imagePath = prefs.getString('imageUrl'); // Lưu lại URL ảnh nếu có
+      _imagePath = prefs.getString('imageUrl');
     });
   }
 
@@ -39,24 +39,18 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
     };
 
     try {
-      // Nếu có hình ảnh mới, upload hình ảnh trước
-
       final result = await _accountService.updateAccount(userId, accountData);
 
-      // Cập nhật URL ảnh mới vào SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fullName', accountData['fullName']);
 
-      // Lưu URL mới nếu có
       if (_imagePath != null) {
-        await prefs.setString('imageUrl', result['image']); // Lưu URL từ phản hồi
+        await prefs.setString('imageUrl', result['image']);
       }
-
-      print('Cập nhật thành công: $result');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Cập nhật thành công!'),
+          content: Text('Cập nhật thành công! Đăng xuất để áp dụng thay đổi.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -70,7 +64,7 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _imagePath = pickedFile.path; // Lưu đường dẫn ảnh
+        _imagePath = pickedFile.path;
       });
     }
   }
@@ -79,7 +73,7 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Lỗi'),
+        title: Text('Lỗi', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text(message),
         actions: [
           TextButton(
@@ -94,51 +88,86 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Cập nhật tài khoản')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Mật khẩu'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Tải lên ảnh mới'),
-            ),
-            if (_imagePath != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: kIsWeb // Kiểm tra nếu đang chạy trên web
-                    ? Image.network(
-                  _imagePath!, // Nếu image là URL
-                  height: 100,
-                  fit: BoxFit.cover,
-                )
-                    : Image.file(
-                  File(_imagePath!), // Nếu là file cục bộ
-                  height: 100,
-                  fit: BoxFit.cover,
+      appBar: AppBar(
+        title: Text('Cập nhật tài khoản', style: TextStyle(fontSize: 24)),
+        backgroundColor: Colors.orange,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              SizedBox(height: 20),
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  labelStyle: TextStyle(color: Colors.orange),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                  ),
+                  border: OutlineInputBorder(),
                 ),
               ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateAccount,
-              child: Text('Cập nhật'),
-            ),
-          ],
+              SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Mật khẩu',
+                  labelStyle: TextStyle(color: Colors.orange),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                  ),
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text('Chọn ảnh đại diện', style: TextStyle(fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,  // Use backgroundColor instead of primary
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+
+              if (_imagePath != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: kIsWeb
+                      ? Image.network(
+                    _imagePath!,
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                  )
+                      : Image.file(
+                    File(_imagePath!),
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _updateAccount,
+                child: Text('Cập nhật', style: TextStyle(fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,  // Use backgroundColor instead of primary
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-
-
