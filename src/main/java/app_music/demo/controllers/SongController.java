@@ -38,5 +38,10 @@ public class SongController {
     public void deleteById(@PathVariable Long id) {
         songService.deleteSong(id);
     }
+    //tim kiem song bang key work
+    @GetMapping("/find/{name}")
+    public List<Song> findSongsByName(@PathVariable String name) {
+        return songService.findSongsByName(name);
+    }
 }
 
