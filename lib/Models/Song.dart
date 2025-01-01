@@ -1,45 +1,44 @@
 class Song {
-  final int id;
-  final String name;
-  final String artist;
-  final String? url; // Có thể là null
-  final String? image; // Có thể là null
-  final Genre genre;
-  final int likeCount;
+  int id;
+  String name;
+  String artist;
+  String url; // Đường dẫn file nhạc
+  String? image; // Hình ảnh có thể là null
+  int genreId;
+  int likeCount;
 
   Song({
     required this.id,
     required this.name,
     required this.artist,
-    this.url,
+    required this.url,
     this.image,
-    required this.genre,
+    required this.genreId,
     required this.likeCount,
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
     return Song(
-      id: json['id'],
-      name: json['name'],
-      artist: json['artist'],
-      url: json['url'], // URL có thể là null
-      image: json['image'], // Ảnh có thể là null
-      genre: Genre.fromJson(json['genre']),
-      likeCount: json['likeCount'],
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name'] ?? 'Unknown',
+      artist: json['artist'] ?? 'Unknown Artist',
+      url: json['url'] ?? '',
+      image: json['image'] ?? null, // Đặt thành null nếu không có hình ảnh
+      genreId: json['genre'] != null ? (json['genre']['id'] is int ? json['genre']['id'] : int.tryParse(json['genre']['id'].toString()) ?? 0) : 0,
+      likeCount: json['likeCount'] ?? 0,
     );
   }
-}
 
-class Genre {
-  final int id;
-  final String name;
-
-  Genre({required this.id, required this.name});
-
-  factory Genre.fromJson(Map<String, dynamic> json) {
-    return Genre(
-      id: json['id'],
-      name: json['name'],
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'artist': artist,
+      'url': url,
+      'image': image,
+      'genre': {
+        'id': genreId,
+      },
+      'likeCount': likeCount,
+    };
   }
 }

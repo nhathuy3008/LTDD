@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './accountupdate_page.dart';
 import '../Services/playlist_service.dart';
 import '../Models/Playlist.dart';
+import '../Screens/create_song.dart';
 
 import 'search.dart';
 
@@ -257,6 +258,16 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: Colors.orange,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateSongPage()),
+          );
+        },
+        child: Icon(Icons.upload_file), // Biểu tượng tải lên
+        backgroundColor: Colors.orange,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
