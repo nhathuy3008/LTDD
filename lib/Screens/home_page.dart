@@ -5,10 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './accountupdate_page.dart';
 import '../Services/playlist_service.dart';
 import '../Models/Playlist.dart';
-import '../Screens/create_song.dart';
-
+import './song_in_playlist.dart';
 import 'search.dart';
-
+import './create_song.dart';
+import './create_playlist.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -97,6 +97,30 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Widget _buildProfileButton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (image != null && image!.isNotEmpty)
+          CircleAvatar(
+            backgroundImage: NetworkImage(image!),
+            radius: 12,
+          )
+        else
+          Icon(
+            Icons.person,
+            size: 24,
+            color: Colors.grey,
+          ),
+        SizedBox(width: 4),
+        Text(
+          fullName != null ? fullName! : 'Cá nhân',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,37 +140,40 @@ class _HomePageState extends State<HomePage> {
             : Text('Home'),
         backgroundColor: Colors.orange,
         actions: [
-          if (fullName != null)
-            PopupMenuButton(
-              onSelected: (value) {
-                if (value == 'logout') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Xác nhận đăng xuất'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            _logout();
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Có'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text('Không'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+          if (userId != null)
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreatePlaylistPage()),
+                );
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Text('Đăng xuất'),
-                ),
-              ],
+            ),
+          if (fullName != null)
+            IconButton(
+              icon: Icon(Icons.logout), // Biểu tượng đăng xuất
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Xác nhận đăng xuất'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          _logout();
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Có'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Không'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             )
           else
             Row(
@@ -200,32 +227,37 @@ class _HomePageState extends State<HomePage> {
                     child: GestureDetector(
                       onTap: userId != null
                           ? () {
-
+                        if (playlists[index].id != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SongListPage(playlistId: playlists[index].id!),
+                            ),
+                          );
+                        } else {
+                          _showLoginPrompt('ID playlist không hợp lệ.');
+                        }
                       }
-                          : () => _showLoginPrompt(
-                          'Vui lòng đăng nhập để xem danh sách bài hát.'),
+                          : () => _showLoginPrompt('Vui lòng đăng nhập để xem danh sách bài hát.'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (playlists[index].image != null &&
-                              playlists[index].image!.isNotEmpty)
+                          if (playlists[index].image != null && playlists[index].image!.isNotEmpty)
                             ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(10)),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                               child: Image.network(
                                 playlists[index].image!,
                                 height: 150,
                                 width: double.infinity,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                               ),
                             ),
+                          SizedBox(height: 8),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
                               playlists[index].name,
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -240,18 +272,52 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Trang chủ',
+            icon: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.home),
+                SizedBox(height: 4),
+                Text('Trang chủ', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Tìm kiếm',
+            icon: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search),
+                SizedBox(height: 4),
+                Text('Tìm kiếm', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Cá nhân',
+            icon: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (image != null && image!.isNotEmpty)
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(image!),
+                    radius: 12,
+                  )
+                else
+                  Icon(
+                    Icons.person,
+                    size: 24,
+                    color: Colors.grey,
+                  ),
+                SizedBox(height: 4),
+                Text(
+                  fullName != null ? fullName! : 'Cá nhân',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
+            label: '',
           ),
         ],
         currentIndex: 0,
@@ -259,16 +325,18 @@ class _HomePageState extends State<HomePage> {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: userId != null
+          ? FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => CreateSongPage()),
           );
         },
-        child: Icon(Icons.upload_file), // Biểu tượng tải lên
+        child: Icon(Icons.upload_file),
         backgroundColor: Colors.orange,
-      ),
+      )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

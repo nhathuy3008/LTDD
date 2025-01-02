@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AccountService {
-  //final String baseUrl = 'http://10.0.2.2:8080/api/accounts'; // Sử dụng baseUrl từ config.dart
+  final String baseUrl = 'http://10.0.2.2:8080/api/accounts'; // Sử dụng baseUrl từ config.dart
   // final String cloudinaryUrl = cloudinaryUrl;
-  final String baseUrl = 'http://localhost:8080/api/accounts';
+  //final String baseUrl = 'http://localhost:8080/api/accounts';
 
   // Hàm loại bỏ dấu tiếng Việt
   String removeDiacritics(String text) {

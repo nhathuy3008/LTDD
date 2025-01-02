@@ -32,8 +32,8 @@ import '../Models/Song.dart'; // Nhập mô hình Song
 
 class SongService {
   // Đặt URL cơ sở ở đây
-  final String baseUrl = 'http://localhost:8080/api/songs'; // Bạn có thể thay đổi thành 'http://10.0.2.2:8080/api/songs' khi chạy trên trình giả lập
-
+  //final String baseUrl = 'http://localhost:8080/api/songs'; // Bạn có thể thay đổi thành 'http://10.0.2.2:8080/api/songs' khi chạy trên trình giả lập
+  final String baseUrl = 'http://10.0.2.2:8080/api/songs';
   /// Tìm kiếm bài hát theo tên.
   Future<List<Song>> findSongsByName(String name) async {
     final response = await http.get(
