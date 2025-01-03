@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'dart:io';
 class AccountService {
   final String baseUrl = 'http://10.0.2.2:8080/api/accounts'; // Sử dụng baseUrl từ config.dart
   // final String cloudinaryUrl = cloudinaryUrl;
@@ -39,6 +39,7 @@ class AccountService {
       throw Exception('Không thể kết nối đến API: $e');
     }
   }
+
   // Đăng nhập
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
@@ -56,23 +57,40 @@ class AccountService {
       throw Exception('Không thể kết nối đến API: $e');
     }
   }
+
   //cập nhật tài khoản
-  Future<Map<String, dynamic>> updateAccount(String id, Map<String, dynamic> accountData) async {
+  Future<Map<String, dynamic>> updateAccount(String id, Map<String, dynamic> accountData, [File? imageFile]) async {
     if (accountData.isEmpty) {
       throw Exception('Dữ liệu cập nhật không được để trống.');
     }
 
     try {
-      final response = await http.put(
+      var request = http.MultipartRequest(
+        'PUT',
         Uri.parse('$baseUrl/$id'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(accountData),
       );
 
+      // Thêm các trường dữ liệu vào request
+      request.fields['fullName'] = accountData['fullName'] ?? '';
+      request.fields['password'] = accountData['password'] ?? '';
+
+      // Thêm tệp hình ảnh nếu có
+      if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'image', // Tên trường phải trùng với tên trong backend
+          imageFile.path,
+        ));
+      }
+
+      // Gửi request
+      final response = await request.send();
+
+      // Xử lý phản hồi
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final responseBody = await response.stream.bytesToString();
+        return json.decode(responseBody);
       } else {
-        throw Exception('Lỗi cập nhật tài khoản: ${response.statusCode} - ${response.body}');
+        throw Exception('Lỗi cập nhật tài khoản: ${response.statusCode} - ${await response.stream.bytesToString()}');
       }
     } catch (e) {
       throw Exception('Không thể kết nối đến API: $e');

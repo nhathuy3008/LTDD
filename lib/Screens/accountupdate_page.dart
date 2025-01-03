@@ -38,13 +38,18 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
       'password': _passwordController.text,
     };
 
+    File? imageFile;
+    if (_imagePath != null && File(_imagePath!).existsSync()) {
+      imageFile = File(_imagePath!);
+    }
+
     try {
-      final result = await _accountService.updateAccount(userId, accountData);
+      final result = await _accountService.updateAccount(userId, accountData, imageFile);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fullName', accountData['fullName']);
 
-      if (_imagePath != null) {
+      if (result['image'] != null) {
         await prefs.setString('imageUrl', result['image']);
       }
 
@@ -54,7 +59,6 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
           duration: Duration(seconds: 2),
         ),
       );
-
     } catch (e) {
       _showErrorDialog(e.toString());
     }
@@ -127,26 +131,26 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
                 onPressed: _pickImage,
                 child: Text('Chọn ảnh đại diện', style: TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,  // Use backgroundColor instead of primary
+                  backgroundColor: Colors.orange,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
-
+              SizedBox(height: 20),
               if (_imagePath != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: kIsWeb
-                      ? Image.network(
-                    _imagePath!,
+                  child: File(_imagePath!).existsSync()
+                      ? Image.file(
+                    File(_imagePath!),
                     height: 120,
                     width: 120,
                     fit: BoxFit.cover,
                   )
-                      : Image.file(
-                    File(_imagePath!),
+                      : Image.network(
+                    _imagePath!,
                     height: 120,
                     width: 120,
                     fit: BoxFit.cover,
@@ -157,7 +161,7 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
                 onPressed: _updateAccount,
                 child: Text('Cập nhật', style: TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,  // Use backgroundColor instead of primary
+                  backgroundColor: Colors.orange,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
