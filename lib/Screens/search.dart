@@ -146,6 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               builder: (context) => PlaySongScreen(
                                 playlist: _allSongs,
                                 currentSongIndex: index,
+                                accountId: '', // Thêm ID tài khoản người dùng ở đây
                               ),
                             ),
                           );
