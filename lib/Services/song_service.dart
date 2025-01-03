@@ -117,4 +117,21 @@ class SongService {
       throw Exception('Lỗi mạng hoặc kết nối.');
     }
   }
+  Future<String> playSong(int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/play/$id'),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Giả sử API trả về URL của bài hát
+      return jsonDecode(response.body)['url']; // Cập nhật để lấy URL từ phản hồi
+    } else if (response.statusCode == 404) {
+      throw Exception('Bài hát không tồn tại.');
+    } else {
+      throw Exception('Lỗi khi phát bài hát: ${response.statusCode}');
+    }
+  }
 }
