@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Services/account_service.dart';
+import '../Screens/verify_page.dart'; // Nhập trang VerifyScreen
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -24,15 +25,34 @@ class _RegisterPageState extends State<RegisterPage> {
       'password': password,
     };
 
+    print('Dữ liệu gửi đến API: $accountData');
+
     try {
+      // Gọi phương thức createAccount và lưu kết quả
       final response = await _accountService.createAccount(accountData);
-      setState(() {
-        _message = response['message'];
-      });
+      print('Phản hồi từ API: $response'); // In ra phản hồi
+
+      // Kiểm tra trường 'status' trong phản hồi
+      if (response['status'] == 'thành công') {
+        setState(() {
+          _message = response['message']; // Cập nhật thông báo
+        });
+        // Chuyển sang trang xác thực
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => VerifyScreen(email: email)),
+        );
+      } else {
+        // Nếu không phải 'thành công', hiển thị thông báo lỗi
+        setState(() {
+          _message = response['message'] ?? 'Đăng ký thất bại!';
+        });
+      }
     } catch (e) {
       setState(() {
-        _message = 'Đăng ký thất bại';
+        _message = 'Đăng ký thất bại: $e';
       });
+      print('Lỗi: $e');
     }
   }
 

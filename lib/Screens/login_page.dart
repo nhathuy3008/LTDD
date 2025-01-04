@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'register_page.dart'; // Nhập trang RegisterPage
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Services/account_service.dart';
 
@@ -103,6 +104,17 @@ class _LoginPageState extends State<LoginPage> {
                 : ElevatedButton(
               onPressed: _login,
               child: Text('Đăng nhập'),
+            ),
+            SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                // Chuyển hướng đến trang đăng ký
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisterPage()),
+                );
+              },
+              child: Text('Chưa có tài khoản? Đăng ký'),
             ),
           ],
         ),

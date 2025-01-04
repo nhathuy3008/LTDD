@@ -4,8 +4,9 @@ import 'package:http/http.dart' as http;
 import '../Models/Playlist.dart';
 import '../Models/Song.dart';
 class PlaylistService {
-  final String baseUrl = 'http://10.0.2.2:8080/api/playlists';
+  //final String baseUrl = 'http://10.0.2.2:8080/api/playlists';
   //final String baseUrl = 'http://localhost:8080/api/playlists';
+  final String baseUrl = 'http://192.168.2.4:8080/api/playlists';
   Future<List<Playlist>> fetchPlaylists() async {
     final response = await http.get(Uri.parse(baseUrl));
 
