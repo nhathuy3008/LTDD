@@ -1,42 +1,120 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+
 class AccountService {
-  final String baseUrl = 'http://10.0.2.2:8080/api/accounts'; // Sử dụng baseUrl từ config.dart
-  // final String cloudinaryUrl = cloudinaryUrl;
-  //final String baseUrl = 'http://localhost:8080/api/accounts';
+  final String baseUrl = 'http://192.168.2.4:8080/api/accounts';
 
-  // Hàm loại bỏ dấu tiếng Việt
-  String removeDiacritics(String text) {
-    const vietnamese = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ'
-        'ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ';
-    const without = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd'
-        'AAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD';
+  // Tải hình ảnh từ URL và lưu vào file tạm thời
+  Future<File> downloadImage(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final bytes = response.bodyBytes;
 
-    for (int i = 0; i < vietnamese.length; i++) {
-      text = text.replaceAll(vietnamese[i], without[i]);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/temp_image.jpg');
+
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+
+  // Hàm xử lý phản hồi từ API
+  Future<dynamic> handleResponse(http.Response response) async {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(utf8.decode(response.bodyBytes)); // Giải mã UTF-8
+    } else {
+      print('Error from API: ${response.statusCode} - ${response.body}');
+      throw Exception('Error: ${response.body}');
     }
-
-    return text;
   }
 
   // Tạo tài khoản
-  Future<Map<String, dynamic>> createAccount(
-      Map<String, dynamic> accountData) async {
+  Future<Map<String, dynamic>> createAccount(Map<String, dynamic> accountData) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/create'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: json.encode(accountData),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Lỗi đăng ký: ${response.body}');
+      final responseBody = await handleResponse(response);
+
+      // Đảm bảo phản hồi chứa trường success
+      if (responseBody['success'] == null) {
+        responseBody['success'] = false; // Thiết lập mặc định nếu không có
       }
+
+      return responseBody;
     } catch (e) {
-      throw Exception('Không thể kết nối đến API: $e');
+      print('Connection error: $e');
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Lấy tất cả tài khoản
+  Future<List<dynamic>> getAllAccounts() async {
+    try {
+      final response = await http.get(Uri.parse(baseUrl));
+      return await handleResponse(response);
+    } catch (e) {
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Lấy tài khoản theo ID
+  Future<Map<String, dynamic>> getAccountById(String id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      return await handleResponse(response);
+    } catch (e) {
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Cập nhật tài khoản
+  Future<Map<String, dynamic>> updateAccount(String id, Map<String, dynamic> accountData, String? imagePath) async {
+    if (accountData.isEmpty) {
+      throw Exception('Dữ liệu cập nhật không được để trống.');
+    }
+
+    try {
+      var request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/$id'));
+      request.headers['Content-Type'] = 'application/json; charset=utf-8'; // Đảm bảo mã hóa
+
+      // Thêm dữ liệu vào request
+      request.fields['fullName'] = accountData['fullName'];
+
+      // Chỉ thêm mật khẩu nếu người dùng muốn thay đổi
+      if (accountData['password'] != null && accountData['password'].isNotEmpty) {
+        request.fields['password'] = accountData['password'];
+      }
+
+      // Thêm file hình ảnh nếu có
+      if (imagePath != null) {
+        // Nếu imagePath là URL, tải về trước
+        if (imagePath.startsWith('http')) {
+          File imageFile = await downloadImage(imagePath);
+          imagePath = imageFile.path; // Cập nhật đường dẫn
+        }
+        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      }
+
+      var response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      return json.decode(responseBody);
+    } catch (e) {
+      print('Connection error: $e');
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Xóa tài khoản
+  Future<Map<String, dynamic>> deleteAccount(String id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      return await handleResponse(response);
+    } catch (e) {
+      throw Exception('Cannot connect to API: $e');
     }
   }
 
@@ -45,55 +123,42 @@ class AccountService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login?email=$email&password=$password'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json; charset=utf-8'}, // Đảm bảo mã hóa
       );
 
-      if (response.statusCode == 200) {
-        return json.decode(utf8.decode(response.bodyBytes));
-      } else {
-        throw Exception('Lỗi đăng nhập: ${response.body}');
-      }
+      return await handleResponse(response);
     } catch (e) {
-      throw Exception('Không thể kết nối đến API: $e');
+      throw Exception('Cannot connect to API: $e');
     }
   }
 
-  //cập nhật tài khoản
-  Future<Map<String, dynamic>> updateAccount(String id, Map<String, dynamic> accountData, [File? imageFile]) async {
-    if (accountData.isEmpty) {
-      throw Exception('Dữ liệu cập nhật không được để trống.');
-    }
-
+  // Xác thực mật khẩu
+  Future<Map<String, dynamic>> validatePassword(String id, String oldPassword) async {
     try {
-      var request = http.MultipartRequest(
-        'PUT',
-        Uri.parse('$baseUrl/$id'),
+      final uri = Uri.parse('$baseUrl/validate-password?id=$id&oldPassword=$oldPassword');
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
       );
 
-      // Thêm các trường dữ liệu vào request
-      request.fields['fullName'] = accountData['fullName'] ?? '';
-      request.fields['password'] = accountData['password'] ?? '';
+      // Ghi lại phản hồi
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-      // Thêm tệp hình ảnh nếu có
-      if (imageFile != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'image', // Tên trường phải trùng với tên trong backend
-          imageFile.path,
-        ));
-      }
-
-      // Gửi request
-      final response = await request.send();
-
-      // Xử lý phản hồi
-      if (response.statusCode == 200) {
-        final responseBody = await response.stream.bytesToString();
-        return json.decode(responseBody);
-      } else {
-        throw Exception('Lỗi cập nhật tài khoản: ${response.statusCode} - ${await response.stream.bytesToString()}');
-      }
+      return await handleResponse(response);
     } catch (e) {
-      throw Exception('Không thể kết nối đến API: $e');
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Lấy tổng số người dùng
+  Future<int> getTotalUsers() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/total'));
+      return await handleResponse(response);
+    } catch (e) {
+      throw Exception('Cannot connect to API: $e');
     }
   }
 }

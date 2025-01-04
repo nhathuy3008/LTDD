@@ -3,7 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Services/account_service.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 class AccountUpdatePage extends StatefulWidget {
   @override
@@ -12,10 +11,13 @@ class AccountUpdatePage extends StatefulWidget {
 
 class _AccountUpdatePageState extends State<AccountUpdatePage> {
   final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController(); // Thêm trường xác nhận mật khẩu
   String? _imagePath;
   final ImagePicker _picker = ImagePicker();
   final AccountService _accountService = AccountService();
+  bool _isChangingPassword = false;
 
   @override
   void initState() {
@@ -33,23 +35,43 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
 
   Future<void> _updateAccount() async {
     final String userId = (await SharedPreferences.getInstance()).getString('userId') ?? '';
-    final Map<String, dynamic> accountData = {
-      'fullName': _usernameController.text,
-      'password': _passwordController.text,
-    };
 
-    File? imageFile;
-    if (_imagePath != null && File(_imagePath!).existsSync()) {
-      imageFile = File(_imagePath!);
+    if (userId.isEmpty) {
+      _showErrorDialog('ID tài khoản không hợp lệ');
+      return;
     }
 
-    try {
-      final result = await _accountService.updateAccount(userId, accountData, imageFile);
+    final Map<String, dynamic> accountData = {
+      'fullName': _usernameController.text,
+    };
 
+    if (_isChangingPassword && _newPasswordController.text.isNotEmpty) {
+      // Kiểm tra mật khẩu cũ
+      final isValidPassword = await _accountService.validatePassword(userId, _oldPasswordController.text);
+
+      // Kiểm tra nếu mật khẩu cũ hợp lệ
+      if (isValidPassword['status'] != 'thành công') {
+        _showErrorDialog('Mật khẩu cũ không đúng, vui lòng thử lại.');
+        return;
+      }
+
+      // Kiểm tra mật khẩu mới và xác nhận
+      if (_newPasswordController.text != _confirmPasswordController.text) {
+        _showErrorDialog('Mật khẩu mới và xác nhận không trùng nhau.');
+        return;
+      }
+
+      accountData['password'] = _newPasswordController.text;
+    }
+
+    print('Dữ liệu đang gửi đến API: $accountData');
+
+    try {
+      final result = await _accountService.updateAccount(userId, accountData, _imagePath);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fullName', accountData['fullName']);
 
-      if (result['image'] != null) {
+      if (_imagePath != null) {
         await prefs.setString('imageUrl', result['image']);
       }
 
@@ -60,6 +82,7 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
         ),
       );
     } catch (e) {
+      print('Lỗi khi cập nhật tài khoản: $e');
       _showErrorDialog(e.toString());
     }
   }
@@ -114,19 +137,63 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
                 ),
               ),
               SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Mật khẩu',
-                  labelStyle: TextStyle(color: Colors.orange),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _isChangingPassword,
+                    onChanged: (value) {
+                      setState(() {
+                        _isChangingPassword = value!;
+                        _oldPasswordController.clear();
+                        _newPasswordController.clear();
+                        _confirmPasswordController.clear(); // Xóa trường xác nhận khi thay đổi trạng thái
+                      });
+                    },
                   ),
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
+                  Text('Thay đổi mật khẩu'),
+                ],
               ),
-              SizedBox(height: 20),
+              if (_isChangingPassword) ...[
+                TextField(
+                  controller: _oldPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu cũ',
+                    labelStyle: TextStyle(color: Colors.orange),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.orange),
+                    ),
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _newPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu mới',
+                    labelStyle: TextStyle(color: Colors.orange),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.orange),
+                    ),
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _confirmPasswordController, // Thêm trường xác nhận mật khẩu
+                  decoration: InputDecoration(
+                    labelText: 'Xác nhận mật khẩu mới',
+                    labelStyle: TextStyle(color: Colors.orange),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.orange),
+                    ),
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 20),
+              ],
               ElevatedButton(
                 onPressed: _pickImage,
                 child: Text('Chọn ảnh đại diện', style: TextStyle(fontSize: 16)),
@@ -138,19 +205,21 @@ class _AccountUpdatePageState extends State<AccountUpdatePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              if (_imagePath != null)
+              if (_imagePath != null && _imagePath!.startsWith('http'))
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: File(_imagePath!).existsSync()
-                      ? Image.file(
-                    File(_imagePath!),
+                  child: Image.network(
+                    _imagePath!,
                     height: 120,
                     width: 120,
                     fit: BoxFit.cover,
-                  )
-                      : Image.network(
-                    _imagePath!,
+                  ),
+                )
+              else if (_imagePath != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: Image.file(
+                    File(_imagePath!),
                     height: 120,
                     width: 120,
                     fit: BoxFit.cover,
