@@ -57,4 +57,37 @@ class PlaylistService {
       throw Exception('Failed to load songs');
     }
   }
+  Future<void> addSongsToPlaylist(int playlistId, List<int> songIds) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/$playlistId/songs'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(songIds),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('Bài hát đã được thêm vào playlist thành công!');
+    } else {
+      final responseBody = utf8.decode(response.bodyBytes); // Sử dụng utf8.decode
+      print('Lỗi từ API: ${response.statusCode}, Nội dung: $responseBody');
+      throw Exception('Không thể thêm bài hát vào playlist: $responseBody');
+    }
+  }
+
+  // Lấy bài hát theo nghệ sĩ
+  Future<List<Song>> fetchSongsByArtist(String artist) async {
+    if (artist.isEmpty) {
+      return [];
+    }
+
+    final response = await http.get(Uri.parse('$baseUrl/songs?artist=$artist'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> songJson = json.decode(utf8.decode(response.bodyBytes)); // Sử dụng utf8.decode
+      return songJson.map((json) => Song.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load songs by artist');
+    }
+  }
 }

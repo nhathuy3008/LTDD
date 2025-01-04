@@ -1,11 +1,14 @@
+import '../Models/Playlist.dart';
 import 'package:flutter/material.dart';
 import '../Services/playlist_service.dart'; // Dịch vụ để gọi API lấy bài hát
 import '../Models/Song.dart'; // Mô hình bài hát
+import '../Screens/play_song.dart'; // Nhớ import màn hình phát nhạc
+import '../Screens/create_song_to_playlist.dart'; // Nhập màn hình thêm bài hát vào playlist
 
 class SongListPage extends StatefulWidget {
-  final int playlistId; // ID của playlist
+  final Playlist playlist; // Đối tượng Playlist
 
-  SongListPage({required this.playlistId});
+  SongListPage({required this.playlist}); // Cập nhật constructor để nhận đối tượng Playlist
 
   @override
   _SongListPageState createState() => _SongListPageState();
@@ -23,7 +26,7 @@ class _SongListPageState extends State<SongListPage> {
 
   _fetchSongs() async {
     try {
-      List<Song> fetchedSongs = await _playlistService.fetchSongs(widget.playlistId);
+      List<Song> fetchedSongs = await _playlistService.fetchSongs(widget.playlist.id); // Sử dụng playlist.id
       setState(() {
         songs = fetchedSongs;
       });
@@ -38,13 +41,24 @@ class _SongListPageState extends State<SongListPage> {
       appBar: AppBar(
         title: Text('Danh sách bài hát'),
       ),
-      body: ListView.builder(
+      body: songs.isEmpty
+          ? Center(child: Text('Không có bài hát nào trong playlist này.')) // Hiển thị thông báo nếu danh sách bài hát trống
+          : ListView.builder(
         itemCount: songs.length,
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
-              // Xử lý khi bấm vào bài hát, ví dụ: phát bài hát
-              print('Playing ${songs[index].name}');
+              // Chuyển đến màn hình phát nhạc khi bấm vào bài hát
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlaySongScreen(
+                    playlist: songs, // Truyền danh sách bài hát
+                    currentSongIndex: index, // Bài hát hiện tại
+                    accountId: '', // Truyền accountId nếu cần
+                  ),
+                ),
+              );
             },
             child: Card(
               margin: EdgeInsets.all(8.0),
@@ -65,6 +79,19 @@ class _SongListPageState extends State<SongListPage> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Chuyển đến trang thêm bài hát vào playlist
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddSongsToPlaylistPage(playlist: widget.playlist), // Truyền đối tượng Playlist
+            ),
+          );
+        },
+        child: Icon(Icons.add), // Biểu tượng +
+        backgroundColor: Colors.orange, // Màu nền của nút
       ),
     );
   }
