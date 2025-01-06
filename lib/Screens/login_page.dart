@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
-import 'register_page.dart'; // Nhập trang RegisterPage
+import 'register_page.dart'; // Thêm import cho RegisterPage
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Services/account_service.dart';
 
@@ -39,19 +39,13 @@ class _LoginPageState extends State<LoginPage> {
 
       final userId = response['id'] ?? '';
       final fullName = response['fullName'] ?? 'Người dùng không xác định';
-      final image = response['image'] ?? ''; // Lấy URL ảnh từ phản hồi
+      final image = response['image'] ?? '';
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userId', userId);
       await prefs.setString('fullName', fullName);
-      await prefs.setString('image', image); // Lưu URL ảnh vào SharedPreferences
+      await prefs.setString('image', image);
 
-      // Kiểm tra và in ra console
-      print('User ID: $userId');
-      print('Full Name: $fullName');
-      print('Image URL: $image'); // In ra URL ảnh
-
-      // Chuyển hướng về trang HomePage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
@@ -84,39 +78,171 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Đăng nhập')),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Mật khẩu'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-              onPressed: _login,
-              child: Text('Đăng nhập'),
-            ),
-            SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                // Chuyển hướng đến trang đăng ký
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterPage()),
-                );
-              },
-              child: Text('Chưa có tài khoản? Đăng ký'),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Image.asset(
+                  "assets/images/vector-1.png",
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  height: MediaQuery.of(context).size.width * 0.5,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Đăng Nhập',
+                style: TextStyle(
+                  color: Color(0xFF755DC1),
+                  fontSize: 27,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 50),
+              TextField(
+                controller: _emailController,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF393939),
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w400,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(
+                    color: Color(0xFF755DC1),
+                    fontSize: 15,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFF837E93),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFF9F7BFF),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: _passwordController,
+                textAlign: TextAlign.center,
+                obscureText: true,
+                style: const TextStyle(
+                  color: Color(0xFF393939),
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w400,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu',
+                  labelStyle: TextStyle(
+                    color: Color(0xFF755DC1),
+                    fontSize: 15,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFF837E93),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(
+                      width: 1,
+                      color: Color(0xFF9F7BFF),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 25),
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9F7BFF),
+                    ),
+                    child: const Text(
+                      'Đăng Nhập',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Chưa có tài khoản?',
+                    style: TextStyle(
+                      color: Color(0xFF837E93),
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 2.5),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()), // Điều hướng tới RegisterPage
+                      );
+                    },
+                    child: const Text(
+                      'Đăng ký',
+                      style: TextStyle(
+                        color: Color(0xFF755DC1),
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 15),
+              const Center(
+                child: Text(
+                  'Quên mật khẩu?',
+                  style: TextStyle(
+                    color: Color(0xFF755DC1),
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
