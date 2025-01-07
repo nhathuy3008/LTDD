@@ -3,7 +3,7 @@ import 'home_page.dart';
 import 'register_page.dart'; // Thêm import cho RegisterPage
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Services/account_service.dart';
-
+import 'fogot_password_page.dart';
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -230,14 +230,22 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 15),
-              const Center(
-                child: Text(
-                  'Quên mật khẩu?',
-                  style: TextStyle(
-                    color: Color(0xFF755DC1),
-                    fontSize: 13,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Quên mật khẩu?',
+                    style: TextStyle(
+                      color: Color(0xFF755DC1),
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

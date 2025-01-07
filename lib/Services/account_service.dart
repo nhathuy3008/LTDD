@@ -161,4 +161,35 @@ class AccountService {
       throw Exception('Cannot connect to API: $e');
     }
   }
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/forgot-password?email=${Uri.encodeComponent(email.trim())}'),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: null, // Không cần body nếu email được gửi qua query parameter
+      );
+
+      return await handleResponse(response);
+    } catch (e) {
+      throw Exception('Cannot connect to API: $e');
+    }
+  }
+
+  // Xác minh mã xác nhận
+  Future<Map<String, dynamic>> verifyCode(String email, String verificationCode) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/verify-code?email=${Uri.encodeComponent(email)}&verificationCode=${Uri.encodeComponent(verificationCode)}'),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+    );
+
+    return await handleResponse(response);
+  }
+
+  Future<void> resetPassword(String email, String verificationCode, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/reset-password?email=${Uri.encodeComponent(email)}&verificationCode=${Uri.encodeComponent(verificationCode)}&newPassword=${Uri.encodeComponent(newPassword)}'),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+    );
+    await handleResponse(response);
+  }
 }
